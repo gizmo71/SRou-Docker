@@ -57,6 +57,10 @@ services:
       <<: *build_defaults
       context: .
       dockerfile: shell.Dockerfile
+    volumes:
+      - home:/home/gizmo71
+      - web:/srv
+      - prod:/home/srouprod:ro
     user: srou
     stdin_open: true
     tty: true
@@ -132,3 +136,6 @@ volumes:
   replays:
     driver: dories:latest
     name: ${SROU_GLUSTER_ROOT}/public_html.srou/replays
+  prod:
+    driver: dories:latest
+    name: srou
