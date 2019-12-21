@@ -1,0 +1,134 @@
+version: '2.3'
+
+#TODO: build on top of downloaded SMF release? e.g. https://download.simplemachines.org/index.php/smf_1-1-21_install.zip
+
+x-build: &build_defaults
+  args:
+    AQUARIUM_HOME: /home/gizmo71
+    AQUARIUM_USER: 9997
+    AQUARIUM_GROUP: 48
+    AQUARIUM_PHP_EXTS: zip mysql gd bcmath
+    AQUARIUM_PHP_BUILD_LIBS: libzip-dev libpng-dev
+    AQUARIUM_PHP_RUNTIME_LIBS: libpng
+    AQUARIUM_PREFIX: srou
+    AQUARIUM_HEALTHCHECK: /srv/public_html.srou/www/healthcheck.php
+    PHP_VERSION: 5.6
+x-service: &service_defaults
+  domainname: "${HOSTNAME}"
+  networks:
+    srou-net: {}
+  restart: always
+  volumes:
+    - home:/home/gizmo71
+    - web:/srv
+  environment:
+    SROU_HOST_WWW: www${SROU_ENV}.simracing.org.uk
+    SROU_HOST_DOWNLOAD: downloads${SROU_ENV}.simracing.org.uk
+    SROU_HOST_REPLAY: replays${SROU_ENV}.simracing.org.uk
+    SROU_HOST_UKGPL: www${SROU_ENV}.ukgpl.com
+    SROU_DB_HOST: mysql
+    SROU_DB_PREFIX: gizmo71_
+    SROU_ROOT: /srv
+    MYSQL_DATABASE: gizmo71
+  env_file:
+    - ../../../secrets/mariadb.env
+
+services:
+  mysql:
+    <<: *service_defaults
+    container_name: 'aquarium-mysql-srou${SROU_ENV}'
+    image: 'gizmo71/mariadb:10.2'
+    hostname: "mysql-srou${SROU_ENV}"
+    networks:
+      srou-net:
+    ports:
+      - "${DB_PORT}:3306"
+    volumes:
+      - /srv/mysql/srou${SROU_ENV}/data:/srv/mysql
+      - /srv/mysql/srou${SROU_ENV}/var:/var/lib/mysql
+      - /srv/mysql/srou${SROU_ENV}/relay:/var/lib/mysql/relay
+      - ../../../mysql/replicate.sh:/home/gizmo71/replicate.sh
+      - ../../../mysql/conf:/etc/mysql/conf.d
+  shell:
+    <<: *service_defaults
+    container_name: 'aquarium-srou${SROU_ENV}-shell'
+    image: 'aquarium:srou${SROU_ENV}-shell'
+    build:
+      <<: *build_defaults
+      context: .
+      dockerfile: shell.Dockerfile
+    user: srou
+    stdin_open: true
+    tty: true
+    depends_on:
+      - mysql
+  php-fpm:
+    <<: *service_defaults
+    container_name: 'aquarium-srou${SROU_ENV}-php'
+    image: 'aquarium:srou${SROU_ENV}-php'
+    build:
+      <<: *build_defaults
+      context: ../../php-fpm
+    hostname: "srou${SROU_ENV}-php"
+    depends_on:
+      - shell
+      - mysql
+  web:
+    <<: *service_defaults
+    container_name: 'aquarium-srou${SROU_ENV}-web'
+    image: 'aquarium:srou${SROU_ENV}-web'
+    build:
+      <<: *build_defaults
+      context: ../../httpd
+    restart: always
+    ports:
+      - "${HTTP_PORT}:80"
+    depends_on:
+      - php-fpm
+  cron:
+    <<: *service_defaults
+    container_name: 'aquarium-srou${SROU_ENV}-cron'
+    image: 'alpine'
+    restart: always
+    command: >
+      sh -c "
+      if grep booby /etc/hosts; then MINS=0,30; else MINS=15,45; fi;
+      echo $$MINS' * * * * wget --header=\"Host: '$${SROU_HOST_WWW}'\" -O - http://web/batch/updateDrivers.php' >/var/spool/cron/crontabs/root
+      && crond -l 8 -f -L /dev/stdout"
+    depends_on:
+      - web
+  sftp:
+    container_name: 'aquarium-srou${SROU_ENV}-sftp'
+    image: 'atmoz/sftp:alpine'
+    restart: always
+    volumes:
+      - ../../../secrets/srou-sftp:/etc/sftp.d/srou-sftp
+      - ukgpl:/home/ukgpl/home/ukgpl
+      - replays:/home/replays/home/replays
+    ports:
+      - "${SFTP_PORT}:22"
+    command: "ukgpl:*:e:9997:48 replays:*:e:9997:48"
+    networks:
+      srou-sftp: {}
+
+networks:
+  srou-net:
+    driver: bridge
+    name: srou${SROU_ENV}-net
+  srou-sftp:
+    driver: bridge
+    name: srou${SROU_ENV}-sftp
+
+volumes:
+  home:
+    driver: dories:latest
+    name: gizmo71
+  web:
+    driver: dories:latest
+    name: ${SROU_GLUSTER_ROOT}
+  ukgpl:
+    driver: dories:latest
+    name: ${SROU_GLUSTER_ROOT}/public_html.ukgpl
+  replays:
+    driver: dories:latest
+    name: ${SROU_GLUSTER_ROOT}/public_html.srou/replays
