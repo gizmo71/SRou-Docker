@@ -7,12 +7,12 @@ x-build: &build_defaults
     AQUARIUM_HOME: /home/gizmo71
     AQUARIUM_USER: 9997
     AQUARIUM_GROUP: 48
-    AQUARIUM_PHP_EXTS: zip mysql gd bcmath
+    AQUARIUM_PHP_EXTS: zip mysqli gd bcmath
     AQUARIUM_PHP_BUILD_LIBS: libzip-dev libpng-dev
     AQUARIUM_PHP_RUNTIME_LIBS: libpng
     AQUARIUM_PREFIX: srou
     AQUARIUM_HEALTHCHECK: /srv/public_html.srou/www/healthcheck.php
-    PHP_VERSION: 5.6
+    PHP_VERSION: 7.3
 x-service: &service_defaults
   domainname: "${HOSTNAME}"
   networks:
