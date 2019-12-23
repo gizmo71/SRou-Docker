@@ -11,7 +11,6 @@ x-build: &build_defaults
     AQUARIUM_PHP_BUILD_LIBS: libzip-dev libpng-dev
     AQUARIUM_PHP_RUNTIME_LIBS: libpng
     AQUARIUM_PREFIX: srou
-    AQUARIUM_HEALTHCHECK: /srv/public_html.srou/www/healthcheck.php
     PHP_VERSION: 5.6
 x-service: &service_defaults
   domainname: "${HOSTNAME}"
@@ -79,7 +78,8 @@ services:
     image: 'aquarium:srou${SROU_ENV}-web'
     build:
       <<: *build_defaults
-      context: ../../httpd
+      context: .
+      dockerfile: httpd.Dockerfile
     restart: always
     ports:
       - "${HTTP_PORT}:80"
