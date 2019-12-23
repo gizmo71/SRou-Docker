@@ -10,8 +10,6 @@ x-build: &build_defaults
     AQUARIUM_PHP_EXTS: zip mysql gd bcmath
     AQUARIUM_PHP_BUILD_LIBS: libzip-dev libpng-dev
     AQUARIUM_PHP_RUNTIME_LIBS: libpng
-    AQUARIUM_PREFIX: srou
-    PHP_VERSION: 5.6
 x-service: &service_defaults
   domainname: "${HOSTNAME}"
   networks:
@@ -67,7 +65,8 @@ services:
     image: 'aquarium:srou${SROU_ENV}-php'
     build:
       <<: *build_defaults
-      context: ../../php-fpm
+      context: .
+      dockerfile: php.Dockerfile
     hostname: "srou${SROU_ENV}-php"
     depends_on:
       - shell
