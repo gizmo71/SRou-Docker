@@ -7,10 +7,9 @@ x-build: &build_defaults
     AQUARIUM_HOME: /home/gizmo71
     AQUARIUM_USER: 9997
     AQUARIUM_GROUP: 48
-    AQUARIUM_PHP_EXTS: zip mysqli gd bcmath
+    AQUARIUM_PHP_EXTS: zip mysql gd bcmath
     AQUARIUM_PHP_BUILD_LIBS: libzip-dev libpng-dev
     AQUARIUM_PHP_RUNTIME_LIBS: libpng
-    AQUARIUM_PREFIX: srou
 x-service: &service_defaults
   domainname: "${HOSTNAME}"
   networks:
