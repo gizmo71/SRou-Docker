@@ -10,7 +10,6 @@ x-build: &build_defaults
     AQUARIUM_PHP_EXTS: zip mysqli gd bcmath
     AQUARIUM_PHP_BUILD_LIBS: libzip-dev libpng-dev
     AQUARIUM_PHP_RUNTIME_LIBS: libpng
-    AQUARIUM_PREFIX: srou
 x-service: &service_defaults
   domainname: "${HOSTNAME}"
   networks:
@@ -19,6 +18,8 @@ x-service: &service_defaults
   volumes:
     - home:/home/gizmo71
     - web:/srv
+    - /var/backup/srou:/var/backup
+    - prod:/home/srouprod:ro
   environment:
     SROU_HOST_WWW: www${SROU_ENV}.simracing.org.uk
     SROU_HOST_DOWNLOAD: downloads${SROU_ENV}.simracing.org.uk
@@ -55,10 +56,6 @@ services:
       <<: *build_defaults
       context: .
       dockerfile: shell.Dockerfile
-    volumes:
-      - home:/home/gizmo71
-      - web:/srv
-      - prod:/home/srouprod:ro
     user: srou
     stdin_open: true
     tty: true
@@ -92,13 +89,12 @@ services:
   cron:
     <<: *service_defaults
     container_name: 'aquarium-srou${SROU_ENV}-cron'
-    image: 'alpine'
+    image: 'aquarium:srou${SROU_ENV}-cron'
+    build:
+      <<: *build_defaults
+      context: .
+      dockerfile: crond.Dockerfile
     restart: always
-    command: >
-      sh -c "
-      if grep booby /etc/hosts; then MINS=0,30; else MINS=15,45; fi;
-      echo $$MINS' * * * * wget --header=\"Host: '$${SROU_HOST_WWW}'\" -O - http://web/batch/updateDrivers.php' >/var/spool/cron/crontabs/root
-      && crond -l 8 -f -L /dev/stdout"
     depends_on:
       - web
   sftp:
