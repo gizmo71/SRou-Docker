@@ -1,1 +1,1 @@
-FROM gizmo71/php:5.6-fpm-alpine
+FROM gizmo71/php:7-fpm-alpine
