@@ -18,6 +18,7 @@ x-service: &service_defaults
   volumes:
     - home:/home/gizmo71
     - web:/srv
+    - /var/backup/srou:/var/backup:ro
   environment:
     SROU_HOST_WWW: www${SROU_ENV}.simracing.org.uk
     SROU_HOST_DOWNLOAD: downloads${SROU_ENV}.simracing.org.uk
