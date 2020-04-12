@@ -1,4 +1,4 @@
-FROM gizmo71/httpd
+FROM gizmo71/httpd:2.4-alpine
 
 ENV AQUARIUM_HEALTHCHECK /srv/public_html.srou/www/healthcheck.php
 
