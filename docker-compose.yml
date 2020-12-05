@@ -29,6 +29,7 @@ x-service: &service_defaults
     SROU_DB_PREFIX: gizmo71_
     SROU_ROOT: /srv
     MYSQL_DATABASE: gizmo71
+    MYSQL_PORT: ${DB_PORT}
   env_file:
     - ../../../secrets/mariadb.env
 
