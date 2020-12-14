@@ -37,7 +37,7 @@ services:
   mysql:
     <<: *service_defaults
     container_name: 'aquarium-mysql-srou${SROU_ENV}'
-    image: 'gizmo71/mariadb:10.2'
+    image: 'gizmo71/mariadb:10.4'
     hostname: "mysql-srou${SROU_ENV}"
     networks:
       srou-net:
