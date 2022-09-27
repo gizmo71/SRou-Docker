@@ -105,6 +105,8 @@ services:
       - ../../../secrets/srou-sftp:/etc/sftp.d/srou-sftp
       - ukgpl:/home/ukgpl/home/ukgpl
       - replays:/home/replays/home/replays
+      - ./keys/replays:/home/replays/.ssh/keys:ro
+      - ./keys/ukgpl:/home/ukgpl/.ssh/keys:ro
     ports:
       - "${SFTP_PORT}:22"
     command: "ukgpl:*:e:9997:48 replays:*:e:9997:48"
